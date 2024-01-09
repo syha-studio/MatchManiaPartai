@@ -1,0 +1,597 @@
+<style>
+  #game-board {
+    display: grid;
+    grid-template-columns: repeat(6, 80px);
+    grid-template-rows: repeat(6, 80px);
+    gap: 5px;
+    margin: 30px auto;
+  }
+
+  #reveal-button {
+    margin-top: 20px;
+    padding: 10px 20px;
+    font-size: 16px;
+    background-color: #e2f266;
+    color: #080808;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+  }
+
+  #reveal-button:hover {
+    background-color: #42e34a;
+  }
+
+  #reset-button {
+    margin-top: 20px;
+    padding: 10px 20px;
+    font-size: 16px;
+    background-color: #a3af4c;
+    color: #fffeee;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+  }
+
+  #reset-button:hover {
+    background-color: #45a049;
+  }
+
+  .container-game {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0;
+    gap: 20px;
+  }
+
+  .cell {
+    width: 80px;
+    height: 80px;
+    border-radius: 10px;
+    background-color: #61dafb; /* Warna biru yang cerah */
+    border: 1px solid #ddd; /* Warna border yang lebih ringan */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    cursor: pointer;
+    transition: background-color 0.3s ease, color 0.3s ease; /* Efek transisi pada perubahan warna latar belakang dan teks */
+    color: #333; /* Warna teks yang lebih gelap */
+  }
+
+  .cell img {
+    max-width: 60%;
+    max-height: 60%;
+    opacity: 0; /* Gambar awalnya disembunyikan */
+    transition: opacity 0.3s ease; /* Efek transisi untuk opacity */
+  }
+
+  .cell.selected img,
+  .cell.matched img,
+  .cell.failed img {
+    opacity: 1; /* Memunculkan gambar saat selected, matched, atau failed */
+  }
+
+  .cell:hover {
+    background-color: #4fa3ff; /* Warna biru yang lebih tua saat dihover */
+    color: #fff; /* Warna teks menjadi putih saat dihover */
+  }
+
+  .selected {
+    background-color: #ffcc29; /* Warna kuning untuk sel terpilih */
+    color: #333; /* Warna teks kembali menjadi gelap */
+  }
+
+  .matched {
+    background-color: #5fd95f;
+    color: #fff;
+  }
+
+  .failed {
+    background-color: #ea6464;
+    color: #fff;
+  }
+
+  .overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 998;
+    display: none;
+  }
+
+  .popup {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    padding: 20px;
+    background-color: #fff;
+    border: 1px solid #ccc;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+    z-index: 999;
+    display: none;
+    border-radius: 10px;
+  }
+
+  .popup-content {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    padding: 20px;
+    background-color: #fff;
+    border: 1px solid #ccc;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+    z-index: 999;
+    display: none;
+    border-radius: 10px;
+  }
+
+  .popup button {
+    padding: 10px 20px;
+    font-size: 16px;
+    cursor: pointer;
+    background-color: #a3af4c;
+    color: #fffeee;
+    border: none;
+    border-radius: 5px;
+    transition: background-color 0.3s ease;
+  }
+
+  .popup button:hover {
+    background-color: #60d466;
+  }
+
+  #continue-button {
+    background-color: #007bff;
+    color: #fff;
+    padding: 10px 20px;
+    font-size: 16px;
+    cursor: pointer;
+    border: none;
+    border-radius: 5px;
+    transition: background-color 0.3s ease;
+    margin-top: 15px;
+  }
+
+  #continue-button:hover {
+    background-color: #0056b3;
+  }
+
+  .card-popup {
+    background-color: #fff;
+    padding: 20px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+    border-radius: 10px;
+    text-align: center;
+  }
+
+  .party-logo {
+    max-width: 100px;
+    max-height: 100px;
+    border-radius: 10px;
+  }
+
+  .party-info {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+  }
+
+  .text-info {
+    text-align: left;
+  }
+
+  .additional-info {
+    margin-top: 10px;
+    text-align: left;
+  }
+
+  #party-name {
+    margin-bottom: 10px;
+    color: #222222;
+    font-size: 24px;
+  }
+
+  #party-jargon {
+    font-size: 18px;
+    color: #222222;
+  }
+
+  #party-description {
+    margin-top: 5px;
+    color: #222222;
+  }
+
+  #party-website {
+    margin-top: 5px;
+    color: #3a488f;
+  }
+
+  .party-info p {
+    margin: 5px 0;
+  }
+</style>
+<div id="container-head" class="container-game"><h1>SIAP GAMES</h1></div>
+<div class="container-game">Ayo Cari Informasi Partai di Indonesia! Cocokkan Logo Partai untuk menemukan Informasinya!</div>
+<div id="container-game" class="container-game">
+  <div id="game-board">
+  </div>
+</div>
+<div id="score" class="container-game">Score: 0</div>
+<div class="container-game">
+  <button id="reset-button">Reset Game</button>
+  <button id="reveal-button">Hint</button>
+</div>
+<div id="popup" class="popup">
+  <div class="overlay"></div>
+  <div class="popup-content">
+    <p></p>
+    <button></button>
+  </div>
+</div>
+
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    const grid = document.getElementById("game-board");
+    const popup = document.createElement("div");
+    popup.classList.add("popup");
+    document.body.appendChild(popup);
+
+    const fruits = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16", "17", "18"];
+    const partyData = {
+      "1": {
+        logo: "assets/img/1.webp",
+        name: "Partai Gerakan Indonesia Raya (Gerindra)",
+        jargon: "Bergerak Bersama Bangkitkan Indonesia Raya",
+        description: "Partai ini identik dengan lambang garuda serta tokoh yang melekat Prabowo Subianto",
+        website: "https://gerindra.id/",
+      },
+      "2": {
+        logo: "assets/img/2.webp",
+        name: "Partai Kebangkitan Bangsa (PKB)",
+        jargon: "Berpolitik Itu Ibadah , Berpolitik Itu Berkah",
+        description: "Partai ini identik dengan warna hijau mewakili kaum Nahdliyin",
+        website: "https://pkb.id/",
+      },
+      "3": {
+        logo: "assets/img/3.webp",
+        name: "Partai Nasional Demokrat (Nasdem)",
+        jargon: "Tegar Dijalan Restorasi Menuju Perubahan",
+        description: "Partai ini identik dengan tokoh politiknya Surya Paloh",
+        website: "https://nasdem.id/",
+      },
+      "4": {
+        logo: "assets/img/4.webp",
+        name: "Partai Buruh",
+        jargon: "Indonesia Sejahtera, Rakyat Bahagia",
+        description: "Partai ini identik dengan warna jingga serta bercita-cita memperjuangkan hak buruh",
+        website: "https://partaiburuh.or.id/",
+      },
+      "5": {
+        logo: "assets/img/5.webp",
+        name: "Partai Keadilan Sejahtera (PKS)",
+        jargon: "Berkhidmat Untuk Rakyat",
+        description: "Partai yang identik dalam 10 tahun terakhir sebagai oposisi Pemerintah",
+        website: "https://pks.id/",
+      },
+      "6": {
+        logo: "assets/img/6.webp",
+        name: "Partai Garda Perubahan Indonesia (Garuda)",
+        jargon: "Perubahan Indonesia",
+        description: "Partai yang identik dengan tokoh yang melekat Ahmad Ridha Sabana",
+        website: "https://partaigaruda.org/",
+      },
+      "7": {
+        logo: "assets/img/7.webp",
+        name: "Partai Gelora Rakyat Indonesia (Gelora)",
+        jargon: "Arah Baru Indonesia",
+        description: "Partai ini identik dengan tokoh Fahri Hamzah dan Anis Matta yang bercita-cita menjadikan partai hanya sebatas alat kendaraan politik dalam pemilu",
+        website: "https://partaigelora.id/",
+      },
+      "8": {
+        logo: "assets/img/8.webp",
+        name: "Partai Amanat Nasional (PAN)",
+        jargon: "Bantu Rakyat",
+        description: "Partai yang identik dengan anggota partai yang didominasi oleh Public Figure/ Influencer",
+        website: "https://pan.or.id/",
+      },
+      "9": {
+        logo: "assets/img/9.webp",
+        name: "Partai Demokrat",
+        jargon: "Bersama Kita Kuat Bersatu Kita Bangkit",
+        description: "Partai yang identik dengan warna biru dengan logo bintang dengan tokoh yang melekat SBY dan AHY",
+        website: "https://www.demokrat.or.id/",
+      },
+      "10": {
+        logo: "assets/img/10.webp",
+        name: "Partai Persatuan Indonesia (Perindo)",
+        jargon: "Untuk Indonesia Sejahtera",
+        description: "Partai yang identik dengan tokoh yang melekat Harry Tanoesoedibjo",
+        website: "https://partaiperindo.com/",
+      },
+      "11": {
+        logo: "assets/img/11.webp",
+        name: "Partai Demokrasi Indonesia-perjuangan (PDIP)",
+        jargon: "Partai Wong Cilik",
+        description: "Partai ini identik dengan warna merah serta lambang banteng moncong putih serta tokoh yang melekat Megawati Soekarno Putri",
+        website: "https://pdiperjuangan.id/",
+      },
+      "12": {
+        logo: "assets/img/12.webp",
+        name: "Partai Golongan Karya (Golkar)",
+        jargon: "Golkar Menang Rakyat Sejahtera",
+        description: "Partai ini identik dengan warna kuning serta lambang pohon beringin dengan tokoh melekat Airlanga Hartanto",
+        website: "https://www.partaigolkar.com/",
+      },
+      "13": {
+        logo: "assets/img/13.webp",
+        name: "Partai Kebangkitan Nasional (PKN)",
+        jargon: "Pejuang Suara Rakyat Selamanya",
+        description: "Partai yang identik dengan tokoh yang melekat Anas Urbaningrum",
+        website: null,
+      },
+      "14": {
+        logo: "assets/img/14.webp",
+        name: "Partai Hati Nurani Rakyat (Hanura)",
+        jargon: "Bangkit Semangat Baru , Berjuang Bersama Rakyat",
+        description: "Partai yang identik dengan tokoh yang melekat Oesman Sapta Odang",
+        website: "https://partaihanura.or.id/",
+      },
+      "15": {
+        logo: "assets/img/15.webp",
+        name: "Partai Bulan Bintang (PBB)",
+        jargon: "PBB Menang Rakyat Senang",
+        description: "Partai yang identik dengan logo bulan bintang serta tokoh yang melekat Yusril Ihza Mahendra",
+        website: "https://partaibulanbintang.or.id/",
+      },
+      "16": {
+        logo: "assets/img/16.webp",
+        name: "Partai Solidaritas Indonesia (PSI)",
+        jargon: "Politik Santuy & Santun",
+        description: "Partai yang identik dengan semangat milenial dan didominasi oleh anak muda",
+        website: "https://psi.id/",
+      },
+      "17": {
+        logo: "assets/img/17.webp",
+        name: "Partai Persatuan Pembangunan (PPP)",
+        jargon: "Merawat Persatuan Dengan Pembangunan",
+        description: "Partai yang identik dengan warna hijau dengan lambang ka'bah",
+        website: "http://ppp.or.id/",
+      },
+      "18": {
+        logo: "assets/img/18.webp",
+        name: "Partai UMMAT",
+        jargon: "Lawan Kezaliman - Tegakkan Keadilan",
+        description: "Partai yang identik dengan warna hitam serta tokoh yang melekat Amin Rais",
+        website: "https://partaiummat.id/id/",
+      },
+    };
+
+    let gameBoard = [];
+    let selectedCells = [];
+    let score = 0;
+    let matchCount = 0;
+
+    function initializeGame() {
+      gameBoard = generateGameBoard();
+      renderGameBoard();
+    }
+
+    function generateGameBoard() {
+      const board = [];
+      const availableFruits = [...fruits]; // Buat salinan dari array buah
+
+      for (let i = 0; i < 6; i++) {
+        const row = [];
+        for (let j = 0; j < 6; j++) {
+          if (availableFruits.length === 0) {
+            // Jika semua buah sudah digunakan, reset array buah
+            availableFruits.push(...fruits);
+          }
+
+          const randomIndex = Math.floor(Math.random() * availableFruits.length);
+          const fruit = availableFruits.splice(randomIndex, 1)[0];
+          row.push({ fruit, matched: false, selected: false });
+        }
+        board.push(row);
+      }
+      return board;
+    }
+
+    function renderGameBoard() {
+      grid.innerHTML = "";
+      gameBoard.forEach((row, rowIndex) => {
+        row.forEach((cell, colIndex) => {
+          const cellElement = document.createElement("div");
+          cellElement.classList.add("cell");
+
+          const imgElement = document.createElement("img");
+          imgElement.src = `assets/img/${cell.fruit}.webp`;
+          imgElement.alt = cell.fruit;
+
+          imgElement.classList.add("image");
+
+          if (cell.selected) {
+            cellElement.classList.add("selected");
+          }
+
+          if (cell.matched) {
+            cellElement.classList.add("matched");
+          }
+
+          if (cell.failed) {
+            cellElement.classList.add("failed");
+          }
+
+          cellElement.appendChild(imgElement);
+
+          cellElement.addEventListener("click", () => handleCellClick(rowIndex, colIndex));
+          grid.appendChild(cellElement);
+        });
+      });
+
+      document.getElementById("score").textContent = `Score: ${score}`;
+    }
+
+    function checkForMatch() {
+      const fruitsToCheck = selectedCells.map(({ row, col }) => gameBoard[row][col].fruit);
+      const matchFound = fruitsToCheck[0] === fruitsToCheck[1];
+
+      if (matchFound) {
+        selectedCells.forEach(({ row, col }) => {
+          gameBoard[row][col].matched = true;
+        });
+        matchCount++;
+        score += 10;
+
+        // Ambil data partai yang sesuai dengan buah yang dicocokkan
+        const matchedPartyData = partyData[fruitsToCheck[0]];
+        showPopup(matchedPartyData, "Continue", resetSelectedCells);
+      } else {
+        selectedCells.forEach(({ row, col }) => {
+          gameBoard[row][col].failed = true;
+        });
+
+        // Jika tidak ada pencocokan, beri waktu untuk menunjukkan sel yang gagal
+        setTimeout(() => {
+          selectedCells.forEach(({ row, col }) => {
+            gameBoard[row][col].selected = false;
+            gameBoard[row][col].failed = false;
+          });
+          resetSelectedCells();
+          renderGameBoard();
+        }, 1000);
+      }
+    }
+
+    function resetSelectedCells() {
+      if (matchCount >= 18) {
+        // Ubah menjadi 18 karena mencocokkan 2 buah
+        const partyData = {
+          logo: "assets/img/trophy_2827957.png",
+          name: "Selamat Anda Menang!",
+          jargon: "Apakah kamu mau bermain lagi?",
+          description: null,
+          website: null,
+        };
+        showPopup(partyData, "Main Lagi", resetGame);
+      }
+      selectedCells = [];
+      renderGameBoard();
+    }
+
+    function handleCellClick(row, col) {
+      const clickedCell = gameBoard[row][col];
+
+      if (!clickedCell.matched && !clickedCell.selected) {
+        clickedCell.selected = true;
+        selectedCells.push({ row, col });
+
+        if (selectedCells.length === 2) {
+          checkForMatch();
+        }
+
+        renderGameBoard();
+      }
+    }
+
+    function resetGame() {
+      score = 0;
+      matchCount = 0;
+
+      gameBoard.forEach((row) => {
+        row.forEach((cell) => {
+          cell.matched = false;
+          cell.selected = false;
+        });
+      });
+
+      document.getElementById("score").textContent = `Score: ${score}`;
+      initializeGame();
+    }
+
+    function showPopup(partyData, buttonText, callback) {
+      const overlay = document.createElement("div");
+      overlay.classList.add("overlay");
+      document.body.appendChild(overlay);
+
+      const popupContent = document.createElement("div");
+      popupContent.classList.add("popup-content", "card-popup");
+
+      // Menambahkan data partai ke dalam card-popup
+      popupContent.innerHTML = `
+  <div class="party-info">
+    <img src="${partyData.logo}" alt="${partyData.name}" class="party-logo" />
+    <div class="text-info">
+      <h2 id="party-name">${partyData.name}</h2>
+      <p id="party-jargon">${partyData.jargon}</p>
+      <div class="additional-info">
+        ${partyData.description ? `<p id="party-description">${partyData.description}</p>` : ""}
+        ${partyData.website ? `<a href="${partyData.website}" target="_blank" id="party-website">Pelajari Lebih Lanjut</a>` : ""}
+      </div>
+    </div>
+  </div>
+  
+  <button id="continue-button">${buttonText}</button>
+`;
+
+      document.body.appendChild(popupContent);
+
+      popupContent.querySelector("button").addEventListener("click", () => {
+        popupContent.style.display = "none";
+        overlay.style.display = "none";
+        if (callback) {
+          callback();
+        }
+      });
+
+      popupContent.style.display = "block";
+      overlay.style.display = "block";
+    }
+
+    // Tambahkan event listener untuk tombol reveal
+    document.getElementById("reveal-button").addEventListener("click", () => {
+      revealImagesForTwoSeconds();
+    });
+
+    function revealImagesForTwoSeconds() {
+      // Tampilkan sementara gambar pada sel selain yang sudah dipasangkan selama 2 detik
+      gameBoard.forEach((row, rowIndex) => {
+        row.forEach((cell, colIndex) => {
+          if (!cell.matched) {
+            cell.selected = true;
+          }
+        });
+      });
+
+      renderGameBoard();
+
+      // Setelah 2 detik, sembunyikan gambar kembali
+      setTimeout(() => {
+        gameBoard.forEach((row, rowIndex) => {
+          row.forEach((cell, colIndex) => {
+            if (!cell.matched) {
+              cell.selected = false;
+            }
+          });
+        });
+        resetSelectedCells();
+        renderGameBoard();
+      }, 1000);
+    }
+
+    // Inisialisasi permainan saat halaman dimuat
+    initializeGame();
+
+    // Tambahkan event listener untuk tombol reset
+    document.getElementById("reset-button").addEventListener("click", resetGame);
+  });
+</script>
